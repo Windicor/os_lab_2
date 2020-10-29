@@ -33,8 +33,6 @@ void parrent_work(int child1, int child2) {
   close(child2);
 }
 
-const char endl = '\n';
-
 int read_name_and_open_file() {
   char f_name[64];
   char buf[1];
