@@ -34,10 +34,11 @@ void parrent_work(int child1, int child2) {
 }
 
 int read_name_and_open_file() {
-  char f_name[64];
+  const size_t FILE_NAME_SIZE = 64;
+  char f_name[FILE_NAME_SIZE];
   char buf[1];
   int idx = 0;
-  while (idx < 64 && read(STDIN_FILENO, buf, 1) > 0) {
+  while (idx < FILE_NAME_SIZE && read(STDIN_FILENO, buf, 1) > 0) {
     if (buf[0] == '\n') {
       break;
     }
