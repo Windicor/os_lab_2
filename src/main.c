@@ -43,7 +43,7 @@ int read_name_and_open_file() {
     }
     f_name[idx++] = buf[0];
   }
-
+  f_name[idx++] = '\0';
   return open(f_name, O_WRONLY | O_TRUNC);
 }
 
@@ -57,7 +57,16 @@ void check_file_id(int id) {
 void check_pipe_creation(int* pipefd) {
   if (pipe(pipefd) == -1) {
     error("Не удалось создать конвейер\n", 52);
+    exit(-2);
   }
+}
+int check_fork() {
+  int fd = fork();
+  if (fd == -1) {
+    error("Не удалось создать процесс\n", 50);
+    exit(-3);
+  }
+  return fd;
 }
 
 int main(int argc, char* argv[]) {
@@ -69,7 +78,7 @@ int main(int argc, char* argv[]) {
   int pipefd1[2];
   check_pipe_creation(pipefd1);
 
-  int child1 = fork();
+  int child1 = check_fork();
   if (child1 == 0) {
     close(pipefd1[1]);
     child_work(pipefd1[0], f1);
@@ -80,7 +89,7 @@ int main(int argc, char* argv[]) {
   int pipefd2[2];
   check_pipe_creation(pipefd2);
 
-  int child2 = fork();
+  int child2 = check_fork();
   if (child2 == 0) {
     close(pipefd1[1]);
     close(pipefd2[1]);
