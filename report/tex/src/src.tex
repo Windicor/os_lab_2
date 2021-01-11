@@ -1,0 +1,147 @@
+\section{Общие сведения о программе}
+
+Программа компилируется из файла main.c. Подключены заголовочные файлы: unistd.h, fcntl.h, stdlib.h. В программе используются следующие системные вызовы:
+
+\begin{enumerate}
+    \item \textbf{pipe} –– принимает массив из двух целых чисел, в случае успеха массив будет содержать два файловых дескриптора, которые будут использоваться для конвейера, первое число в массиве предназначено для чтения, второе для записи, а так же вернется 0. В случае неуспеха вернется -1.
+    \item \textbf{fork} –– создает новый процесс, который является копией родительского процесса, за исключением разных process ID и parent process ID. В случае успеха fork() возвращает 0 для ребенка, число больше 0 для родителя – child ID, в случае ошибки возвращает -1.
+    \item \textbf{open} –– создает или открывает файл, если он был создан. В качестве аргументов принимает путь до файла, режим доступа (запись, чтение и т.п.),  модификатор доступа ( при создании можно указать права для файла ). Возвращает в случае успеха файловый дескриптор – положительное число, иначе возвращает -1.
+    \item \textbf{close} –– принимает файловый дескриптор в качестве аргумента, удаляет файловый дескриптор из таблицы дескрипторов, в случае успеха вернет 0, в случае неуспеха вернет -1.
+    \item \textbf{read} –– предназначена для чтения какого-то числа байт из файла, принимает в качестве аргументов файловый дескриптор, буфер, в который будут записаны данные и число байт. В случае успеха вернет число прочитанных байт, иначе -1.
+    \item \textbf{write} –– предназначена для записи какого-то числа байт в файл, принимает в качестве аргументов файловый дескриптор, буфер, из которого будут считаны данные для записи и число байт. В случае успеха вернет число записанных байт, иначе -1.
+\end{enumerate}
+
+\pagebreak
+
+\section{Общий метод и алгоритм решения}
+
+Для реализации поставленной задачи необходимо:
+
+\begin{enumerate}
+    \item Изучить принципы работы pipe и fork.
+    \item Написать функцию считывания имён выходных файлов
+    \item Создать каналы связи для каждого из дочерних процессов
+    \item Создать функцию обработки ввода
+    \item Создать функцию фильтрации в родительском процессе
+    \item Создать функцию фильтрации в дочерних процессах
+    \item Написать обработку ошибок
+    \item Написать тесты
+\end{enumerate}
+
+\pagebreak
+
+\section{Исходный код}
+
+\textbf{main.c}
+
+\begin{lstlisting}[language=C]
+
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+void child_work(int from, int to) {
+  char buf[1];
+  while (read(from, buf, 1) > 0) {
+    char c = buf[0];
+    if (c != 'a' && c != 'e' && c != 'i' && c != 'o' && c != 'u' && c != 'y' &&
+        c != 'A' && c != 'E' && c != 'I' && c != 'O' && c != 'U' && c != 'Y') {
+      write(to, buf, 1);
+    }
+  }
+  close(to);
+  close(from);
+}
+
+void parrent_work(int child1, int child2) {
+  char buf[1];
+  int is_even = 0;
+  while (read(STDIN_FILENO, buf, 1) > 0) {
+    if (!is_even) {
+      write(child1, buf, 1);
+    } else {
+      write(child2, buf, 1);
+    }
+    if (buf[0] == '\n') {
+      is_even = !is_even;
+    }
+  }
+
+  close(child1);
+  close(child2);
+}
+
+int read_name_and_open_file() {
+  const size_t FILE_NAME_SIZE = 64;
+  char f_name[FILE_NAME_SIZE];
+  char buf[1];
+  int idx = 0;
+  while (idx < FILE_NAME_SIZE && read(STDIN_FILENO, buf, 1) > 0) {
+    if (buf[0] == '\n') {
+      break;
+    }
+    f_name[idx++] = buf[0];
+  }
+  f_name[idx++] = '\0';
+  return open(f_name, O_WRONLY | O_TRUNC);
+}
+
+void error(char* buf, size_t size) { write(STDERR_FILENO, buf, size); }
+void check_file_id(int id) {
+  if (id == -1) {
+    error("File not found\n", 15);
+    exit(-1);
+  }
+}
+void check_pipe_creation(int* pipefd) {
+  if (pipe(pipefd) == -1) {
+    error("Cannot create pipe\n", 19);
+    exit(-2);
+  }
+}
+int check_fork() {
+  int fd = fork();
+  if (fd == -1) {
+    error("Cannot create process\n", 22);
+    exit(-3);
+  }
+  return fd;
+}
+
+int main(int argc, char* argv[]) {
+  int f1 = read_name_and_open_file();
+  check_file_id(f1);
+  int f2 = read_name_and_open_file();
+  check_file_id(f2);
+
+  int pipefd1[2];
+  check_pipe_creation(pipefd1);
+
+  int child1 = check_fork();
+  if (child1 == 0) {
+    close(pipefd1[1]);
+    child_work(pipefd1[0], f1);
+    return 0;
+  }
+  close(pipefd1[0]);
+
+  int pipefd2[2];
+  check_pipe_creation(pipefd2);
+
+  int child2 = check_fork();
+  if (child2 == 0) {
+    close(pipefd1[1]);
+    close(pipefd2[1]);
+    child_work(pipefd2[0], f2);
+    return 0;
+  }
+  close(pipefd2[0]);
+
+  parrent_work(pipefd1[1], pipefd2[1]);
+
+  return 0;
+}
+
+\end{lstlisting}
+
+\pagebreak

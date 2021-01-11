@@ -1,0 +1,80 @@
+\section{Пример работы}
+
+Первый тест - проверка на обработку случая отсутсвия первого файла
+
+\begin{verbatim}
+
+windicor@Lina-HP:~$ cat test1
+f
+windicor@Lina-HP:~$ ./a.out <test1
+File not found
+
+\end{verbatim}
+
+Второй тест - проверка на обработку случая отсутсвия второго файла
+
+\begin{verbatim}
+
+windicor@Lina-HP:~$ cat test2
+f1
+f
+windicor@Lina-HP:~$ ./a.out <test2
+File not found
+
+\end{verbatim}
+
+Третий и четвёртый тесты - проверка работоспособности программы на корректных данных
+
+\begin{verbatim}
+
+windicor@Lina-HP:~$ cat test3
+f1
+f2
+a b c d e f g h i j k l
+m n o p q r s t u v w x y z
+windicor@Lina-HP:~$ ./a.out <test3
+windicor@Lina-HP:~$ cat f1
+ b c d  f g h  j k l 
+windicor@Lina-HP:~$ cat f2
+m n  p q r s t  v w x  z
+windicor@Lina-HP:~$ cat test4
+f1
+f2
+m n o p q r s t u v w x y z
+a b c d e f g h i j k l
+m n o p q r s t u v w x y z
+a b c d e f g h i j k l
+m n o p q r s t u v w x y z
+a b c d e f g h i j k l
+m n o p q r s t u v w x y z
+a b c d e f g h i j k l
+windicor@Lina-HP:~$ ./a.out <test4
+windicor@Lina-HP:~$ cat f1
+m n  p q r s t  v w x  z
+m n  p q r s t  v w x  z
+m n  p q r s t  v w x  z
+m n  p q r s t  v w x  z
+windicor@Lina-HP:~$ cat f2
+ b c d  f g h  j k l 
+ b c d  f g h  j k l 
+ b c d  f g h  j k l
+ b c d  f g h  j k l
+ 
+\end{verbatim}
+
+Пятый тест - проверка работоспособности программы на пустых данных
+
+\begin{verbatim}
+ 
+windicor@Lina-HP:~$ cat test5
+f1
+f2
+windicor@Lina-HP:~$ ./a.out <test5
+windicor@Lina-HP:~$ cat f1
+windicor@Lina-HP:~$ cat f2
+
+\end{verbatim}
+
+\pagebreak
+
+
