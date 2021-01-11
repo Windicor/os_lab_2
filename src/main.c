@@ -51,20 +51,20 @@ int read_name_and_open_file() {
 void error(char* buf, size_t size) { write(STDERR_FILENO, buf, size); }
 void check_file_id(int id) {
   if (id == -1) {
-    error("Файл не найден\n", 27);
+    error("File not found\n", 15);
     exit(-1);
   }
 }
 void check_pipe_creation(int* pipefd) {
   if (pipe(pipefd) == -1) {
-    error("Не удалось создать конвейер\n", 52);
+    error("Cannot create pipe\n", 19);
     exit(-2);
   }
 }
 int check_fork() {
   int fd = fork();
   if (fd == -1) {
-    error("Не удалось создать процесс\n", 50);
+    error("Cannot create process\n", 22);
     exit(-3);
   }
   return fd;
