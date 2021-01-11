@@ -64,7 +64,7 @@ void check_pipe_creation(int* pipefd) {
 int check_fork() {
   int fd = fork();
   if (fd == -1) {
-    error("Cannot create process\n", 22);
+    error("Can not create process\n", 23);
     exit(-3);
   }
   return fd;
